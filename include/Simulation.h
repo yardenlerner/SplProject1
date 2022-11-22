@@ -22,10 +22,13 @@ public:
     const Party &getParty(int partyId) const;
     const vector<vector<int>> getPartiesByCoalitions() const;
     //added methods
-    void addDuplicate(Agent *duplicate); 
-    void addCoalition(Coalition *coalition); // adds the coalition to the simulation
+    Agent* addDuplicate(int AgentDuplicateId, Party *party); 
+    void addCoalition(Coalition coalition); // adds the coalition to the simulation -- needs to
     void setMaxMandates(int _maxMandates);//changes the maxMandates if needed
     void setNumOfJoinedPartys();// adds ++ to numOfJoinedPartys 
+    Coalition* getCoalition(int coalitionId);
+    Graph* getGraph();
+    vector<Agent>* getAgents();
   
 
         
@@ -36,7 +39,7 @@ private:
 
     //add fields 
     bool isInitialized; // deafault value false 
-    vector<Coalition*> allCoalition;
+    vector<Coalition> allCoalition; 
     int maxMandates; //default value 0
     int numOfJoinedPartys; //deafault value 0
 };

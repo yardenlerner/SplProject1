@@ -22,6 +22,12 @@ class Party
 {
 public:
     Party(int id, string name, int mandates, JoinPolicy *); 
+    //rule of 5
+    Party(const Party &other);// copy constructor
+    ~Party(); // destructor
+    Party& operator=(const Party &other);// copy assigment operator
+    Party (Party &&other); // move constructor
+    Party& operator=(Party &&other); // move assigment operator
 
     State getState() const;
     void setState(State state);
@@ -29,21 +35,20 @@ public:
     void step(Simulation &s);
     const string &getName() const;
     // added methods
-    void addAgent(Agent *agent, int agentId);
+    void addAgent( int agentId);
     int getId () const; 
-    Agent* getMaxAgent(); // returns the agent with maxMandate offerd
-    vector<Agent*> getmOffers();
+    //int getMaxAgentId(); // returns the agent with maxMandate offerd
+    vector<int> *getmOffers();
+    //void reserveMoffers(int numOfPartys);
 
 
 private:
     int mId;
     string mName;
     int mMandates;
-    JoinPolicy *mJoinPolicy;
+    JoinPolicy *mJoinPolicy; //delete in destructor 
     State mState;
     //added fields
-    int mTimer; 
-    vector<Agent*> mOffers;
-    int maxMandetsForChoosingAgent;
-    Agent* maxMandetAgent;
+    int mTimer; // default 0
+    vector<int> mOffers; 
 };

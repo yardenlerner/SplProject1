@@ -4,27 +4,29 @@
 
 using std::vector;
 
-EdgeWeightSelectionPolicy:: EdgeWeightSelectionPolicy(){
-    // empty constructor
+EdgeWeightSelectionPolicy* EdgeWeightSelectionPolicy::clone()const{
+    return new EdgeWeightSelectionPolicy(*this);
 }
 
 void EdgeWeightSelectionPolicy:: choose(Agent *agent,Simulation& s){
 
-    Graph g = s.getGraph();
+    Graph *g = s.getGraph();
 
-    vector<Party*> optionalPartys = (*agent).getOptionalPartys();
+    vector<int> *optionalPartys = (*agent).getOptionalPartys();
     int maxWeigt=0;
-    int idx;
+    int idx=0;
 
     // finding the max weight
-    for(int i = 0; i<optionalPartys.size(); i++){
+    int sizeOfOptionalPartys = (*optionalPartys).size();
+    for(int i = 0; i<sizeOfOptionalPartys; i++){
 
-        int currEdge = g.getEdgeWeight((*optionalPartys[i]).getId(), (*agent).getPartyId());
+        Party *currParty = (*g).getParty((*optionalPartys)[i]);
+        int currEdge = (*g).getEdgeWeight((*currParty).getId(), (*agent).getPartyId());
         if( currEdge >= maxWeigt){
             // checking by id
             if(currEdge == maxWeigt){
-
-                if((*optionalPartys[i]).getId()< (*optionalPartys[idx]).getId())
+               
+                if((*currParty).getId()< (*optionalPartys)[idx])
                     idx = i;
                 
             }
@@ -37,9 +39,17 @@ void EdgeWeightSelectionPolicy:: choose(Agent *agent,Simulation& s){
         }
     }
 
-    Party selectedParty= (*optionalPartys[idx]);
-    selectedParty.addAgent(agent, (*agent).getId()); // adds the agent to the party's offers
-    (*agent).getCoalition()->addOffer(selectedParty.getId()); // make party unavailable to select 
-    optionalPartys.erase(optionalPartys.begin() + idx); // need to check if its a copy or a pointer !!!!!!!!!!!!
+    Party *selectedParty= (*g).getParty((*optionalPartys)[idx]);
+
+    
+
+    (*selectedParty).addAgent( (*agent).getId()); // adds the agent to the party's offers ++ needs to change
+    int  agentCoalitionId = (*agent).getCoalitionId();
+    Coalition *agetCoalition = s.getCoalition(agentCoalitionId);
+    int selectedPartyId = (*selectedParty).getId();
+    
+    (*agetCoalition).addOffer(selectedPartyId); // make party unavailable to select 
+    
+    (*optionalPartys).erase((*optionalPartys).begin() + idx); // removing the party from the vetor
 
 }

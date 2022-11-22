@@ -1,7 +1,7 @@
 all: clean bin/cRace
 
-bin/cRace: bin/main.o bin/Agent.o bin/Graph.o bin/Parser.o bin/Party.o bin/Simulation.o
-	g++ -o bin/cRace bin/main.o bin/Agent.o bin/Graph.o bin/Parser.o bin/Party.o bin/Simulation.o
+bin/cRace: bin/main.o bin/Agent.o bin/Graph.o bin/Parser.o bin/Party.o bin/Simulation.o bin/Coalition.o bin/EdgeWeightSelectionPolicy.o bin/LastOfferJoinPolicy.o bin/MandatesJoinPolicy.o bin/MandatesSelectionPolicy.o
+	g++ -o bin/cRace bin/main.o bin/Agent.o bin/Graph.o bin/Parser.o bin/Party.o bin/Simulation.o bin/Coalition.o bin/EdgeWeightSelectionPolicy.o bin/LastOfferJoinPolicy.o bin/MandatesJoinPolicy.o bin/MandatesSelectionPolicy.o
 
 bin/main.o: src/main.cpp
 	g++ -g -Wall -Weffc++ -std=c++11 -c -Iinclude -o bin/main.o src/main.cpp

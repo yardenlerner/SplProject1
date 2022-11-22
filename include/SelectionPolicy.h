@@ -5,17 +5,21 @@
 
 class SelectionPolicy {
     public:
-        virtual void choose(Agent *agent,Simulation& s)=0;
+      virtual ~SelectionPolicy()= default;
+      virtual SelectionPolicy *clone() const= 0;
+      virtual void choose(Agent *agent,Simulation& s)=0;
  };
 
 class MandatesSelectionPolicy: public SelectionPolicy{
     public:
-        MandatesSelectionPolicy();
-        virtual void choose(Agent *agent,Simulation& s);
+      ~MandatesSelectionPolicy() = default;
+      virtual MandatesSelectionPolicy *clone() const;
+      virtual void choose(Agent *agent,Simulation& s);
  };
 
 class EdgeWeightSelectionPolicy: public SelectionPolicy{ 
     public:
-        EdgeWeightSelectionPolicy();
-        virtual void choose(Agent *agent,Simulation& s);
+      ~EdgeWeightSelectionPolicy()= default;
+      virtual EdgeWeightSelectionPolicy *clone() const;
+      virtual void choose(Agent *agent,Simulation& s);        
 };

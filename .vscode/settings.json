@@ -1,0 +1,15 @@
+{
+    "makefile.launchConfigurations": [
+        {
+            "cwd": "/home/spl211/SPL23_Assignment1/Skeleton/bin",
+            "binaryPath": "/home/spl211/SPL23_Assignment1/Skeleton/bin/cRace",
+            "binaryArgs": ["../tests/01.json"]
+        }
+    ],
+    "files.associations": {
+        "*.tcc": "cpp",
+        "memory_resource": "cpp",
+        "sstream": "cpp",
+        "new": "cpp"
+    }
+}

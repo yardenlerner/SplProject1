@@ -4,24 +4,29 @@
 
 using std::vector;
 
-MandatesSelectionPolicy:: MandatesSelectionPolicy(){
-    // empty constructor
+MandatesSelectionPolicy *MandatesSelectionPolicy::clone() const{
+    return new MandatesSelectionPolicy(*this);
 }
 
 void MandatesSelectionPolicy:: choose(Agent *agent,Simulation& s){
 
     int maxMandates= 0;
     int idx= 0;
-    vector <Party*> optionalPartys = (*agent).getOptionalPartys();
+    vector <int> *optionalPartys = (*agent).getOptionalPartys();
 
     // finding the max mandates party
-    for(int i=0; i< optionalPartys.size(); i++){
-        int currMandates= (*optionalPartys[i]).getMandates();
+    int sizeOfoptionalPartys= (*optionalPartys).size();
+    Graph *graph = s.getGraph();
+    for(int i=0; i<sizeOfoptionalPartys; i++){
+        
+        Party *currParty = (*graph).getParty((*optionalPartys)[i]);
+        int currMandates= (*currParty).getMandates();
 
         if(currMandates>= maxMandates){
             // checking by id 
+                        
             if(currMandates== maxMandates){
-                if((*optionalPartys[idx]).getId()>(*optionalPartys[i]).getId()){
+                if((*optionalPartys)[idx]>(*currParty).getId()){
                     idx=i;
                 }
             }
@@ -35,10 +40,12 @@ void MandatesSelectionPolicy:: choose(Agent *agent,Simulation& s){
         }
     }
 
-    Party selectedParty= (*optionalPartys[idx]);
-    selectedParty.addAgent(agent, (*agent).getId()); // adds the agent to the party's offers
-    (*agent).getCoalition()->addOffer(selectedParty.getId()); // make party unavailable to select 
-    optionalPartys.erase(optionalPartys.begin() + idx); // need to check if its a copy or a pointer !!!!!!!!!!!!
+    Party *maxParty = (*graph).getParty((*optionalPartys)[idx]);
+   
+    (*maxParty).addAgent((*agent).getId()); // adds the agent to the party's offers
+    
+    s.getCoalition((*agent).getCoalitionId())->addOffer((*maxParty).getId()); // make party unavailable to select 
+    (*optionalPartys).erase((*optionalPartys).begin() + idx); // removes the party ID from optional
 
 
 }

@@ -1,21 +1,29 @@
 #pragma once
- 
+#include "Simulation.h"
 
 class Party;
+class Agent;
 
 class JoinPolicy {
     public:
-        virtual Agent* choose(Party &party , int agentId) = 0;
+        virtual ~JoinPolicy()=default;
+        virtual JoinPolicy* clone() const = 0;
+        virtual int choose(Party *party , Simulation &s) = 0;
 };
 
 class MandatesJoinPolicy : public JoinPolicy {
     public:
-        MandatesJoinPolicy();
-        virtual Agent* choose(Party &party , int agentId);
+        ~MandatesJoinPolicy() override = default;
+        virtual MandatesJoinPolicy* clone() const;
+        virtual int choose(Party *party , Simulation &s);
+    
 };
 
 class LastOfferJoinPolicy : public JoinPolicy {
     public:
-        LastOfferJoinPolicy();
-        virtual Agent* choose(Party &party , int agentId);
+        ~LastOfferJoinPolicy() override = default;
+        virtual LastOfferJoinPolicy* clone() const;
+        virtual int choose(Party *party , Simulation &s);
+
+        
 };

@@ -3,21 +3,49 @@
 
 #include <vector>
 #include <Party.h>
+#include <Simulation.h>
 
 using std::vector;
 
-MandatesJoinPolicy:: MandatesJoinPolicy(){} // empty constructor
+MandatesJoinPolicy* MandatesJoinPolicy::clone()const{
+    return new MandatesJoinPolicy(*this);
+}
 
-Agent* MandatesJoinPolicy::choose(Party &party , int agetId){
-    // creates the duplicate agent for the coalitions
-    Agent *maxAgnet = party.getMaxAgent();
-    Agent *newAgent = new Agent(agetId , party.getId() ,(*maxAgnet).getSelectionPolicy() , (*maxAgnet).getCoalition()); // saves at heap
-    
-    //add party and agent to the coalition
-     (*maxAgnet).getCoalition()->addParty(&party);
-     (*maxAgnet).getCoalition()->addAgent(newAgent);
-    
 
-    return newAgent;
+int MandatesJoinPolicy::choose(Party *party , Simulation &s){
+    //finding the maxMandate Agent
+    int maxMandates=0;
+    int maxIndx=0;
+    vector<int> *mOffers = (*party).getmOffers();
+    int mOffersSize = (*mOffers).size();
+    vector<Agent> *agents = s.getAgents();
+    for(int i = 0; i<mOffersSize; i++){
+        Agent currAgent = (*agents)[i];
+        Coalition *coalition = s.getCoalition(currAgent.getCoalitionId());
+        int currMandates = coalition->getMandetes();
+        if(currMandates>= maxMandates){
+            if(currMandates == maxMandates ){//needs to check by party id
+                int maxAgentId = (*mOffers)[maxIndx];
+                Agent maxAgent = (*agents)[maxAgentId];
+                if(maxAgent.getPartyId()>currAgent.getPartyId()){
+                    maxIndx = i;
+                }
+            }
+
+            else{ // regular state
+                maxMandates = currMandates;
+                maxIndx = i;
+            }
+        }
+    }
+
+    int maxAgentId = (*mOffers)[maxIndx];
+    Agent maxAgent = (*agents)[maxAgentId];
+
+    //add party  to the coalition
+    Coalition *coalition = s.getCoalition(maxAgent.getCoalitionId());
+    (*coalition).addParty(party->getId(), party->getMandates());
+        
+    return maxAgentId;
 }
 

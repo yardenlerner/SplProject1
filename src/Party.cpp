@@ -5,11 +5,90 @@
 #include <vector>
 using std::vector;
 
-Party::Party(int id, string name, int mandates, JoinPolicy *jp) : mId(id), mName(name), mMandates(mandates), mJoinPolicy(jp), mState(Waiting)  , maxMandetAgent(nullptr)
+
+Party::Party(int id, string name, int mandates, JoinPolicy *jp) : mId(id), mName(name), mMandates(mandates), mJoinPolicy(jp), mState(Waiting) , mTimer(0) , mOffers()
 {
     // You can change the implementation of the constructor, but not the signature!
 
-    // mTimer , mOffers , maxMandetsForChoosingAgent initialize with deffault values
+    // mTimer , mOffers ,  initialize with deffault values
+    
+}
+
+// rule of 5 implemantation
+
+Party::Party(const Party &other):mId(other.getId()) , mName(other.getName()) , mMandates(other.getMandates()) , mJoinPolicy(other.mJoinPolicy->clone()),mState(other.getState()) , mTimer(other.mTimer),mOffers()
+{
+
+    int sizeOfMoffers = other.mOffers.size();
+    for(int i = sizeOfMoffers - 1; i >= 0; i--)
+        mOffers.push_back(other.mOffers[i]);
+
+}
+
+// copy assignment operator
+Party& Party::operator=(const Party &other){
+
+    if(this != &other){
+        mId = other.getId();
+        mName = other.getName();
+        mMandates = other.getMandates();
+        *mJoinPolicy = *other.mJoinPolicy;
+        mState = other.getState();
+        mTimer = other.mTimer;
+
+
+        mOffers.clear();
+        int sizeOfMoffers = other.mOffers.size();
+        for(int i = sizeOfMoffers - 1; i >= 0; i--)
+            mOffers.push_back(other.mOffers[i]);
+    }
+
+    return *this;
+
+
+}
+
+Party:: ~Party(){//destructor
+    if (mJoinPolicy) delete mJoinPolicy;
+}
+
+//move constructor
+Party:: Party(Party &&other):mId(other.getId()) , mName(other.getName()) , mMandates(other.getMandates()) , mJoinPolicy(other.mJoinPolicy->clone()),mState(other.getState()) , mTimer(other.mTimer),mOffers(){
+    int sizeOfMoffers = other.mOffers.size();
+    for(int i = sizeOfMoffers - 1; i >= 0; i--)
+        mOffers.push_back(other.mOffers[i]);
+
+    //deleting other resources
+    other.mJoinPolicy=nullptr;
+    other.mOffers.clear();
+    
+}
+
+//move assigment operator
+Party& Party::operator=(Party &&other){
+
+    mOffers.clear();
+
+    mId = other.getId();
+    mName = other.getName();
+    mMandates = other.getMandates();
+    mState = other.getState();
+    mTimer = other.mTimer;
+
+    if(mJoinPolicy) delete mJoinPolicy;
+    mJoinPolicy= other.mJoinPolicy;
+    other.mJoinPolicy=nullptr;
+
+    mOffers.clear();
+    int sizeOfMoffers = other.mOffers.size();
+    for(int i = sizeOfMoffers - 1; i >= 0; i--)
+        mOffers.push_back(other.mOffers[i]);
+
+    //deleting other resources
+    delete other.mJoinPolicy;
+    other.mOffers.clear();
+
+    return *this;
 }
 
 State Party::getState() const
@@ -51,32 +130,19 @@ void Party::step(Simulation &s)
 
     if(mTimer==3){
         //adds the duplicate to the list of agents
-        Agent *duplicate = (*mJoinPolicy).choose(*this , s.getAgents().size());
-        
-        int newAgentPartyId = (*duplicate).getId();
-        Graph graph = s.getGraph();
-        vector<Party*> newAgentOptionalPartys = (*duplicate).getOptionalPartys();
-        //adding optional partys to new agent ++ not sure that vector object is a pointer
-        for(int i=0; i<graph.getNumVertices(); i++){
-            if(graph.getEdgeWeight(newAgentPartyId,i)>0){
-                Party *newOptionalParty = graph.getParty(i);
-                newAgentOptionalPartys.push_back(newOptionalParty);
-            }
-        }
-
+        int AgentDuplicateId = (*mJoinPolicy).choose(this , s);
+      
         //adds agent and changes the num of joiend partys and maxMandates if needed
-        s.addDuplicate(duplicate);
-        s.setMaxMandates((*duplicate).getCoalition()->getMandetes());
+        Agent *newAgent= s.addDuplicate(AgentDuplicateId, this);
+        Coalition *coalition = s.getCoalition((*newAgent).getCoalitionId());
+        (*coalition).addAgent((*newAgent).getId());
+        s.setMaxMandates((*coalition).getMandetes());
         s.setNumOfJoinedPartys();
 
         mState = Joined;
 
-
     }
 
-    
-
-    
 }
 
 //added methods
@@ -84,12 +150,12 @@ void Party::step(Simulation &s)
 //**
 
 //adds an agent to the list of agents offering the party
-void Party::addAgent(Agent *agent, int agentId)
+void Party::addAgent( int agentId)
 {
    if (mState == Waiting){
         mState = CollectingOffers;
    }
-    mOffers.push_back(agent);
+    mOffers.push_back(agentId);
 }
 
 
@@ -97,24 +163,9 @@ int Party::getId () const{
     return mId;
 }
 
-Agent* Party::getMaxAgent() {
-    int maxMandates=0;
-    int maxIndx=0;
-    for(int i = 0; i<mOffers.size(); i++){
-        int currMandates = mOffers[i]->getCoalition()->getMandetes();
-        if(currMandates>= maxMandates){
-            if(currMandates == maxMandates ){//not sure if the condition is right by definition of work
-                if(mOffers[maxIndx]->getPartyId()>mOffers[i]->getPartyId()){
-                    maxIndx = i;
-                }
-            }
 
-            else{
-                maxMandates = currMandates;
-                maxIndx = i;
-            }
-        }
-    }
 
-    return mOffers[maxIndx];
+vector<int> *Party::getmOffers(){
+    return &mOffers;
 }
+

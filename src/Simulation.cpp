@@ -1,43 +1,54 @@
 #include "Simulation.h"
-#include <Agent.h>
+#include "SelectionPolicy.h"
 #include <iostream>
 #include <vector>
-#include <Coalition.h>
-#include <Graph.h>
 
 using namespace std;
 
 
-Simulation::Simulation(Graph graph, vector<Agent> agents) : mGraph(graph), mAgents(agents) 
+Simulation::Simulation(Graph graph, vector<Agent> agents) : mGraph(graph), mAgents(agents) , isInitialized(false) , allCoalition() , maxMandates(0), numOfJoinedPartys(0)
 {
-    // You can change the implementation of the constructor, but not the signature!
+    if(!isInitialized){
+   // creating coalition from the list of agents
+        int sizeOfmAgents = mAgents.size();
+        for(int i=0; i < sizeOfmAgents; i++){
+            
+            Coalition newCoalition(mGraph , mAgents[i],i);  
+            addCoalition(newCoalition);
+            mAgents[i].setCoalition(i);
+        }
+    }
 }
 
 void Simulation::step()
 {
     if(!isInitialized){
-        // creating coalition from the list of agents
-        for(int i=0; i < mAgents.size(); i++){
-            Coalition *newCoalition = new Coalition(mGraph , mAgents[i]);  // saves at heap
-            addCoalition(newCoalition);
-            mAgents[i].setCoalition(newCoalition);
+       
+        int sizeOfmAgents = mAgents.size();
+        for(int i=0; i < sizeOfmAgents; i++){
+
+            // adding partys to the optional Partys of the agent
+            mAgents[i].initializingOptionalPartys(mGraph);
+
         }
+
 
         isInitialized = true;
     }
     // making step for each party in the Graph.vertics
-    for(int i=0; i < mGraph.getNumVertices(); i++){
+    int numOfVertices = mGraph.getNumVertices();
+    for(int i=0; i < numOfVertices ; i++){
         Party *curr = mGraph.getParty(i);
         (*curr).step(*this);
     }
 
 
     //making step for each agent in mAgents
-    for(int i=0; i < mAgents.size(); i++){
-        Agent curr = mAgents[i];
-        curr.step(*this);
+    int mAgnetsSize = mAgents.size();
+    for(int i=0; i < mAgnetsSize; i++){
+        Agent *curr = &mAgents[i];
+        (*curr).step(*this);
     }
-
 
 }
 
@@ -66,11 +77,37 @@ const Party &Simulation::getParty(int partyId) const
 //**
 //**
 
-void Simulation::addDuplicate(Agent *duplicate){
-    mAgents.push_back((*duplicate));
+vector<Agent>* Simulation::getAgents(){
+    return &mAgents;
 }
 
-void Simulation::addCoalition(Coalition *coalition){
+Coalition* Simulation::getCoalition(int coalitionId){
+    return &allCoalition[coalitionId];
+}
+
+Graph* Simulation::getGraph(){
+    return &mGraph;
+}
+
+Agent* Simulation::addDuplicate(int AgentDuplicateId, Party *party){
+    vector<Agent> *allAgents = (*this).getAgents();
+    //Agent lastAgent = ((*allAgents)[AgentDuplicateId]);
+    Agent duplicate(allAgents->back().getId()+1 , (*party).getId() ,((*allAgents)[AgentDuplicateId]).getSelectionPolicy()->clone() , (*allAgents)[AgentDuplicateId].getCoalitionId()); //duplicate agent
+    //adding optional partys to new agent 
+    vector<int> *newAgentOptionalPartys = duplicate.getOptionalPartys();
+    int numVertices = mGraph.getNumVertices();
+    for(int i=0; i<numVertices; i++){
+        if(mGraph.getEdgeWeight(AgentDuplicateId,i)>0){
+            Party *newOptionalParty = mGraph.getParty(i);
+            if((*newOptionalParty).getState()!= Joined)
+                (*newAgentOptionalPartys).push_back(newOptionalParty->getId());
+            }
+        }
+    mAgents.push_back(duplicate);
+    return &mAgents.back();
+}
+
+void Simulation::addCoalition(Coalition coalition){
     allCoalition.push_back(coalition);
 }
 
@@ -88,15 +125,23 @@ void Simulation::setNumOfJoinedPartys(){
 const vector<vector<int>> Simulation::getPartiesByCoalitions() const
 {
     vector<vector<int>> ans;
+
+    ans.reserve(mGraph.getNumVertices());
+
     //iterates all coalitions
-    for(int i = 0; i<allCoalition.size(); i++){
+    int coalitionsSize = allCoalition.size();
+    for(int i = 0; i<coalitionsSize; i++){
         vector<int> addToAns;
-        Coalition *currCoalition = allCoalition[i];
-        vector<Party*> *coalitionPartys = (*currCoalition).getMpartys();
+        addToAns.reserve(mGraph.getNumVertices());
+        Coalition currCoalition = allCoalition[i];
+
+        vector<int> *coalitionPartys = currCoalition.getMpartys();
 
         //creates the coalition to add 
-        for(int j = 0; j<(*coalitionPartys).size(); i++){
-            addToAns.push_back((*(*coalitionPartys)[j]).getId());
+        int coalitionPartysSize = (*coalitionPartys).size();
+        for(int j = 0; j<coalitionPartysSize; j++){
+            int id = (*coalitionPartys)[coalitionPartysSize-1-j];
+            addToAns.push_back(id);
         }
 
         //adds the coalition

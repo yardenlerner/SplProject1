@@ -1,23 +1,25 @@
 #include "JoinPolicy.h"
 #include <Party.h>
 #include <vector>
+#include <Simulation.h>
 
 
 using std::vector;
 
-LastOfferJoinPolicy:: LastOfferJoinPolicy(){
-    //empty constructor
+LastOfferJoinPolicy* LastOfferJoinPolicy::clone()const{
+    return new LastOfferJoinPolicy(*this);
 }
 
-Agent* LastOfferJoinPolicy::choose(Party &party , int agetId){
+int LastOfferJoinPolicy::choose(Party *party , Simulation &s){
 
     //accessing the last agent 
-    Agent *lastAgent = party.getmOffers().back();
-    Agent *newAgent = new Agent(agetId , party.getId() ,(*lastAgent).getSelectionPolicy() , (*lastAgent).getCoalition());//save on heap
+    int lastAgentId = (*(*party).getmOffers()).back();
+    vector<Agent> *allAgents = s.getAgents();
+    Agent lastAgent = (*allAgents)[lastAgentId];
 
     //add party and agent to the coalition
-     (*lastAgent).getCoalition()->addParty(&party);
-     (*lastAgent).getCoalition()->addAgent(newAgent);
-
-    return newAgent;
+    Coalition *coalition = s.getCoalition(lastAgent.getCoalitionId());
+     (*coalition).addParty(party->getId(), party->getMandates());
+     
+    return lastAgentId;
 }
